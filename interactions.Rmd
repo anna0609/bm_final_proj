@@ -1,0 +1,138 @@
+---
+title: "Final project"
+author: "Minjie Bao (mb4757)"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = NA, message = FALSE)
+options(width = 150)
+```
+
+```{r}
+library(tidyverse)
+library(HH)
+library(leaps)
+library(corrplot)    
+library(caret)
+library(skimr)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+theme_set(theme_minimal() +  theme(legend.position = "bottom"))
+
+options(
+  ggplots2.continuous.color = "viridis",
+  ggplots2.continuous.fill = "viridus"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+### Consider interactions between variables (e.g., urbanization), and if the case, fit stratified models. 
+
+
+```{r}
+data_crimes = 
+  read_csv("./data/HateCrimes.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(unemployment = recode_factor(unemployment, "high" = 1, "low" = 0),
+         urbanization = recode_factor(urbanization, "high" = 1, "low" = 0),
+         hate_crimes_per_100k_splc = as.numeric(hate_crimes_per_100k_splc)
+         )
+skimr::skim(data_crimes)
+```
+
+
+```{r}
+fit0 = lm(hate_crimes_per_100k_splc ~ unemployment + urbanization + median_household_income + perc_population_with_high_school_degree + perc_non_citizen + gini_index + perc_non_white, data = data_crimes)
+summary(fit0)
+```
+There are two significant variables: perc_population_with_high_school_degree and gini_index.
+
+
+```{r, message=FALSE}
+## graph:
+theme_set(theme_classic())                                          
+ggplot(data_crimes, aes(x=gini_index, y=hate_crimes_per_100k_splc, colour=factor(urbanization))) +  geom_point(size=2, alpha = 0.8) +                     
+geom_smooth(method="lm", se=F, aes(group = factor(urbanization), color = factor(urbanization), alpha = 0.4)) +                                      labs(title="interaction plot 1", x="gini_index", y="hate_crimes_per_100k_splc") +
+scale_color_manual(name="urbanization", labels = c("high", "low"), values = c("blue", "red")) +     
+  annotate(geom="text", x=0.55, y=1.7, label="Unusual", # Add text to the plot 
+color="black", size=3)
+
+## numerical summaries:
+fit1 <- lm(hate_crimes_per_100k_splc ~ gini_index*urbanization, data=data_crimes)
+summary(fit1)
+
+
+#stratify:
+high_urban<-filter(data_crimes, urbanization=="1") 
+reg_high_urban<-lm(hate_crimes_per_100k_splc ~ gini_index, data=high_urban)
+summary(reg_high_urban)
+
+low_urban<-filter(data_crimes, urbanization=="0") 
+reg_low_urban<-lm(hate_crimes_per_100k_splc ~ gini_index, data=low_urban)
+summary(reg_low_urban)
+```
+
+The coefficients change from positive to negative  tell us that the effect of gini_index on hate_crimes_per_100k_splc definitely differs by urbanization status!
+
+From the graph, two regression lines for each level category of urbanization interacts with each other. Also, from the model with the interaction term, the p value of the interaction term is 0.02343 < 0.05, so the interaction term is significant.
+
+Since the interaction term is significant, we will do stratification:
+
+For high urbanization, the estimated coefficient of gini_index is 6.542 > 0, which means that with one unit increase in gini_index, the estimated hate_crimes_per_100k_splc level will increase by 6.542 unit. The p value is 0.0236 < 0.05, which means at the significance level of 0.05, the estimated coefficient of gini_index is significantly different than 0.
+
+For low urbanization, the estimated coefficient of gini_index is -2.696 < 0, which means that with one unit increase in gini_index, the estimated hate_crimes_per_100k_splc level will decrease by 2.696 unit. The p value is 0.242 > 0.05, which means at the significance level of 0.05, the estimated coefficient of gini_index is not significantly different than 0.
+
+As we can see, the slopes of high and low urbanization have different directionality, which means the associations between gini_index and hate_crimes_per_100k_splc level have opposite directions for the two groups.
+
+
+```{r, message=FALSE}
+## graph:
+theme_set(theme_classic())                                          
+ggplot(data_crimes, aes(x=gini_index, y=hate_crimes_per_100k_splc, colour=factor(unemployment))) +  geom_point(size=2, alpha = 0.8) +                     
+geom_smooth(method="lm", se=F, aes(group = factor(unemployment), color = factor(unemployment), alpha = 0.4)) +                                      labs(title="interaction plot 2", x="gini_index", y="hate_crimes_per_100k_splc") +
+scale_color_manual(name="unemployment", labels = c("high", "low"), values = c("blue", "red"))
+
+## numerical summaries:
+fit2 <- lm(hate_crimes_per_100k_splc ~ gini_index*unemployment, data=data_crimes)
+summary(fit2)
+```
+Although the visualization above indicates that an interaction might exist, from the numeric summaries, the p-value of gini_index:unemployment0 is not significant(p-value = 0.08733 > 0.05). Therefore, there's no evidence of interaction of gini_index and unemployment, which means the effect of gini_index on hate_crimes_per_100k_splc is not different with respect to the levels of unemployment.
+
+
+```{r, message=FALSE}
+## graph:
+theme_set(theme_classic())                                          
+ggplot(data_crimes, aes(x=perc_population_with_high_school_degree, y=hate_crimes_per_100k_splc, colour=factor(urbanization))) +  geom_point(size=2, alpha = 0.8) +                     
+geom_smooth(method="lm", se=F, aes(group = factor(urbanization), color = factor(urbanization), alpha = 0.4)) +                                      labs(title="interaction plot 3", x="perc_population_with_high_school_degree", y="hate_crimes_per_100k_splc") +
+scale_color_manual(name="urbanization", labels = c("high", "low"), values = c("blue", "red"))
+
+## numerical summaries:
+fit3 <- lm(hate_crimes_per_100k_splc ~ perc_population_with_high_school_degree * urbanization, data=data_crimes)
+summary(fit3)
+```
+From the graph, we can see that two regression lines for each level category of urbanization are parallel. Also, from the numeric summaries, the p-value of perc_population_with_high_school_degree:urbanization0 is 0.2828 > 0.05, which is not significant. Therefore, there's no interaction between perc_population_with_high_school_degree and urbanization.
+
+
+```{r, message=FALSE}
+## graph:
+theme_set(theme_classic())                                          
+ggplot(data_crimes, aes(x=perc_population_with_high_school_degree, y=hate_crimes_per_100k_splc, colour=factor(unemployment))) +  geom_point(size=2, alpha = 0.8) +                     
+geom_smooth(method="lm", se=F, aes(group = factor(unemployment), color = factor(unemployment), alpha = 0.4)) +                                      labs(title="interaction plot 4", x="perc_population_with_high_school_degree", y="hate_crimes_per_100k_splc") +
+scale_color_manual(name="unemployment", labels = c("high", "low"), values = c("blue", "red"))
+
+## numerical summaries:
+fit4 <- lm(hate_crimes_per_100k_splc ~ perc_population_with_high_school_degree * unemployment, data=data_crimes)
+summary(fit4)
+```
+
+Although the visualization above indicates that an interaction might exist; however, from the numeric summaries, the p-value of perc_population_with_high_school_degree:unemployment0 is 0.2292 > 0.05 which is not significant. Therefore, there's no evidence of interaction of perc_population_with_high_school_degree and unemployment, which means the effect of perc_population_with_high_school_degree on hate_crimes_per_100k_splc is not different with respect to the levels of unemployment.
+
+
