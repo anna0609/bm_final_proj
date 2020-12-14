@@ -1,0 +1,127 @@
+---
+title: "Final Project"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+library(broom)
+library(faraway)
+library(arsenal)
+library(BSDA)
+library(corrplot)
+```
+
+
+```{r}
+hc_df = read_csv("./data/HateCrimes.csv") %>% 
+  janitor::clean_names()
+
+hc_df[hc_df == "N/A"] = NA
+
+hc_df = hc_df %>% 
+  mutate(hate_crimes_per_100k_splc = as.numeric(hate_crimes_per_100k_splc)) %>% 
+  na.omit()
+
+fit1 = lm(hate_crimes_per_100k_splc ~ unemployment + urbanization + median_household_income + perc_population_with_high_school_degree + perc_non_citizen + gini_index + perc_non_white, data = hc_df)
+summary(fit1)
+vif(fit1)
+
+correlation_matrix = 
+cor(hc_df[, sapply(hc_df, is.numeric)],
+    use = "complete.obs", method = "spearman")
+
+correlation_matrix
+
+correlation_plt = 
+  corrplot(correlation_matrix)
+
+qqnorm(resid(fit1))
+qqline(resid(fit1))
+
+
+```
+
+```{r}
+fit2 = lm(hate_crimes_per_100k_splc ~ unemployment + urbanization + median_household_income + gini_index, data = hc_df)
+
+summary(fit2) 
+```
+
+```{r}
+fit3 = lm(hate_crimes_per_100k_splc ~ unemployment + median_household_income + gini_index, data = hc_df)
+
+summary(fit3)
+```
+```{r}
+fit4 = lm(hate_crimes_per_100k_splc ~ median_household_income + gini_index, data = hc_df)
+
+summary(fit4)
+vif(fit4)
+
+qqnorm(resid(fit4))
+qqline(resid(fit4))
+```
+```{r}
+step(fit1, direction = "backward")
+```
+
+```{r}
+fit_after_step = 
+  lm(formula = hate_crimes_per_100k_splc ~ perc_population_with_high_school_degree + 
+    gini_index, data = hc_df)
+
+summary(fit_after_step)
+
+qqnorm(resid(fit_after_step))
+qqline(resid(fit_after_step))
+
+vif(fit_after_step)
+plot(fit_after_step)
+
+```
+Exclude outliers
+```{r}
+hc_df_no_outliers = hc_df[c(-9),]
+
+fit_no_9 = lm(formula = hate_crimes_per_100k_splc ~ perc_population_with_high_school_degree + 
+    gini_index, data = hc_df_no_outliers)
+
+summary(fit_no_9)
+
+plot(fit_no_9)
+```
+```{r}
+hc_df_only_9 = hc_df[c(9),]
+hc_df_only_9
+```
+This line of observation has a hate_crime_per_100k_splc greater than 100%, which is absurd. There was probably a mistake. Excluding this observation makes gini_index an insignificant predictor. 
+
+```{r}
+
+# Residuals vs. Covariates plots
+
+hc_df_no_outliers %>% 
+  ggplot(aes(x = perc_population_with_high_school_degree,
+             y = resid(fit_no_9))) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw()
+
+hc_df_no_outliers %>% 
+  ggplot(aes(x = gini_index,
+             y = resid(fit_no_9))) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw()
+
+```
+
+
+
+# Deal with collinearity 
+
+```{r}
+vif(fit_no_9)
+```
+No multicollinearity issues. 
