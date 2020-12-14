@@ -122,6 +122,6 @@ hc_df_no_outliers %>%
 # Deal with collinearity 
 
 ```{r}
-vif(fit_no_9)
+vif(fit_no_9) 
 ```
 No multicollinearity issues. 

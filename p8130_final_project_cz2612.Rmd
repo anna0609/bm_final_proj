@@ -1,0 +1,115 @@
+---
+title: "Final Project"
+author: "Cong Zhang"
+date: 2020-12-12
+output: html_document
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+library(ggplot2)
+library(arsenal)
+library(modelr)
+
+knitr::opts_chunk$set(
+	fig.width = 6, 
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
+set.seed(1)
+```
+
+## Import Data.
+
+```{r hatecrime_df, message = FALSE, warning = FALSE}
+hatecrime_df = 
+  read_csv("./data/HateCrimes.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    state = as.factor(state),
+    unemployment = as.factor(unemployment),
+    urbanization = as.factor(urbanization),
+    hate_crimes_per_100k_splc = as.numeric(hate_crimes_per_100k_splc)
+  )
+```
+
+The original dataset `HateCrimes.csv` contains the following `r ncol(hatecrime_df)` variables: `r names(hatecrime_df)`.  This dataset has `r nrow(hatecrime_df)` observations and `r sum(is.na(hatecrime_df))` missing values: `hate_crimes_per_100k_splc` values are missing in Hawaii, North Dakota, South Dakota, and Wyoming ; `perc_non_citizen` values are missing in Maine, Mississippi, and South Dakota.
+
+
+## Explore the distribution of the outcome and consider potential transformations (if the case).
+
+```{r plot of outcome, message = FALSE, warning = FALSE}
+hatecrime_df %>% 
+  drop_na(hate_crimes_per_100k_splc) %>% 
+  ggplot(aes(x = hate_crimes_per_100k_splc)) +
+	geom_histogram(alpha = 0.3, fill = "blue") +
+  geom_vline(aes(xintercept = mean(hate_crimes_per_100k_splc, na.rm = TRUE)), color = "red", linetype = "dashed", size = 1) + 
+  labs(title = "Distribution of Hate Crime Rate (Before Transformation)",
+       x = "Hate Crime Rate per 100,000 Population",
+       caption = "Data from HateCrimes.csv Dataset")
+
+qqnorm(hatecrime_df$hate_crimes_per_100k_splc, main = "Q-Q Plot of Hate Crime Rate (Before Transformation)")
+qqline(hatecrime_df$hate_crimes_per_100k_splc)
+
+summary(hatecrime_df$hate_crimes_per_100k_splc)
+```
+
+From the plots, we could see that the distribution of the hate crime rate of the United States is a positively skewed distribution and there is right tail, which makes the mean higher than the median.
+
+
+```{r}
+hatecrime_log_df =
+  hatecrime_df %>% 
+  mutate(hate_crimes_per_100k_splc_log = log(hate_crimes_per_100k_splc))
+
+hatecrime_log_df %>% 
+  drop_na(hate_crimes_per_100k_splc_log) %>% 
+  ggplot(aes(x = hate_crimes_per_100k_splc_log)) +
+	geom_histogram(alpha = 0.3, fill = "blue") +
+  geom_vline(aes(xintercept = mean(hate_crimes_per_100k_splc_log, na.rm = TRUE)), color = "red", linetype = "dashed", size = 1) + 
+  labs(title = "Distribution of Hate Crime Rate (After Log Transformation)",
+       x = "Hate Crime Rate per 100,000 Population",
+       caption = "Data from HateCrimes.csv Dataset")
+
+qqnorm(hatecrime_log_df$hate_crimes_per_100k_splc_log, main = "Q-Q Plot of Hate Crime Rate (After Log Transformation)")
+qqline(hatecrime_log_df$hate_crimes_per_100k_splc_log)
+
+summary(hatecrime_log_df$hate_crimes_per_100k_splc_log)
+```
+
+We could see from the graphs that the distribution of log hate crime rate of in the United States has become relatively normally distributed.
+
+
+## Identify states with unusual rates and consider them as potential outliers/influential points.
+
+```{r box plot, message = FALSE, warning = FALSE}
+hatecrime_df %>% 
+  drop_na(hate_crimes_per_100k_splc) %>% 
+  ggplot(aes(y = hate_crimes_per_100k_splc)) +
+	geom_boxplot(alpha = 0.3, fill = "green") +
+  labs(title = "Distribution of Hate Crime Rate (Before Transformation)",
+       y = "Hate Crime Rate per 100,000 Population",
+       caption = "Data from HateCrimes.csv Dataset")
+
+hatecrime_log_df %>% 
+  drop_na(hate_crimes_per_100k_splc_log) %>% 
+  ggplot(aes(y = hate_crimes_per_100k_splc_log)) +
+	geom_boxplot(alpha = 0.3, fill = "green") +
+  labs(title = "Distribution of Hate Crime Rate (After Log Transformation)",
+       y = "Hate Crime Rate per 100,000 Population",
+       caption = "Data from HateCrimes.csv Dataset")
+```
+
+From the graphs, we could also see that before transformation, the hate crime rates of the District of Columbia and Oregon are much higher than the other states, which suggests that these two could be an potential outliers. However, after log transformation, only the hate crime rate of the District of Columbia is still an outlier.
+
