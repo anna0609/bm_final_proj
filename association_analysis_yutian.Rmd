@@ -1,0 +1,154 @@
+---
+title: "yutian_analysis"
+author: "Yutian Luo"
+date: "12/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(corrplot)
+```
+
+# 2. Verify if this association holds true in this dataset, but also explore associations of all the other covariates mentioned above and draw your own conclusions.
+
+        the initial analysis published by FiveThirtyEight showed that income inequality was the main predictor of hate crimes rates.
+
+
+```{r import data}
+
+hatecrime_data = 
+  read.csv("./data/HateCrimes.csv")
+
+```
+
+
+```{r data cleaning}
+
+hatecrime_df = 
+  hatecrime_data %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    state = as.factor(state),
+    unemployment = as.factor(unemployment),
+    urbanization = as.factor(urbanization),
+    hate_crimes_per_100k_splc = as.numeric(hate_crimes_per_100k_splc)
+  )
+
+```
+
+# why use gini index to represent inequality
+...
+
+```{r association}
+
+attach(hatecrime_df)
+
+pairs(hate_crimes_per_100k_splc~gini_index)
+
+ggplot(hatecrime_df, aes(y = hate_crimes_per_100k_splc, x = gini_index))+
+  geom_point()+
+  geom_smooth(method="lm", se = TRUE)+
+  labs(title = "Inequality vs Hate Crimes")+
+  labs(x = "Gini Index", y = "Hate Crime Rate")
+
+
+```
+
+
+From our initial association analysis, there is limited association between the two variables.
+
+We furthere analyze by linear method.
+
+```{r lm}
+
+# linear method
+fit_mod1 = 
+  lm(hate_crimes_per_100k_splc~gini_index, data = hatecrime_df)
+summary(fit_mod1)
+
+# anova
+anova(fit_mod1)
+
+```
+
+From the t test, we conclude that we are 95% confident that the inequality has a positive linear association with the hate crime rate.
+
+This suggests that the higher inequality is, the higher rate of hate crime will occur.
+
+# futher interpreate
+...
+
+
+```{r corr matrix}
+
+hatecrime_df = 
+  hatecrime_df %>% 
+  drop_na() 
+
+cor(hatecrime_df[,c(4,5,6,7,8,9)])%>%        
+  corrplot(method = "number", type = "lower", diag=FALSE, bg = "black", order = "FPC")
+
+```
+
+From the correlation plot, we see that there is relatively higher correlation between the population's education with median houshold income. 
+
+The other pair of moderate correlation is between inequality and population's high school degreee percentage; inequality with percent of alien; education with percent of none white; and education with inequality.
+
+# mlr model
+Our hypothesis for mlr model:
+1. gini index
+2. education
+
+# We use correlation matrix to propose for a mlr model in part 4
+
+# Exploration
+
+```{r fit model}
+
+mod_1 = lm(perc_non_citizen~perc_non_white, data = hatecrime_df)
+summary(mod_1)
+
+mod_inter = lm(hate_crimes_per_100k_splc~
+                 gini_index +
+                 perc_population_with_high_school_degree +
+                 perc_non_citizen*perc_non_white,
+               data = hatecrime_df)
+summary(mod_inter1)
+
+mod_2 = lm(perc_population_with_high_school_degree~
+             median_household_income,
+           data = hatecrime_df)
+summary(mod_2)
+
+mod_inter2 = lm(hate_crimes_per_100k_splc~
+                  gini_index +
+                 perc_population_with_high_school_degree+
+                 perc_population_with_high_school_degree*median_household_income +
+                perc_non_citizen*perc_non_white,
+                data = hatecrime_df)
+summary(mod_inter2)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
