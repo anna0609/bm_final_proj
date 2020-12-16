@@ -104,34 +104,8 @@ Our hypothesis for mlr model:
 
 # We use correlation matrix to propose for a mlr model in part 4
 
+
 # Exploration
-
-```{r fit model}
-
-mod_1 = lm(perc_non_citizen~perc_non_white, data = hatecrime_df)
-summary(mod_1)
-
-mod_inter = lm(hate_crimes_per_100k_splc~
-                 gini_index +
-                 perc_population_with_high_school_degree +
-                 perc_non_citizen*perc_non_white,
-               data = hatecrime_df)
-summary(mod_inter1)
-
-mod_2 = lm(perc_population_with_high_school_degree~
-             median_household_income,
-           data = hatecrime_df)
-summary(mod_2)
-
-mod_inter2 = lm(hate_crimes_per_100k_splc~
-                  gini_index +
-                 perc_population_with_high_school_degree+
-                 perc_population_with_high_school_degree*median_household_income +
-                perc_non_citizen*perc_non_white,
-                data = hatecrime_df)
-summary(mod_inter2)
-
-```
 
 
 
