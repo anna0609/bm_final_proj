@@ -412,7 +412,7 @@ summary {
 
 <h1 class="title toc-ignore">Final project</h1>
 <h4 class="author">Minjie Bao (mb4757)</h4>
-<h4 class="date">13 December, 2020</h4>
+<h4 class="date">16 December, 2020</h4>
 
 </div>
 
@@ -809,6 +809,115 @@ Residual standard error: 0.2431 on 43 degrees of freedom
 Multiple R-squared:  0.1351,    Adjusted R-squared:  0.07479 
 F-statistic:  2.24 on 3 and 43 DF,  p-value: 0.0973</code></pre>
 <p>Although the visualization above indicates that an interaction might exist; however, from the numeric summaries, the p-value of perc_population_with_high_school_degree:unemployment0 is 0.2292 &gt; 0.05 which is not significant. Therefore, there’s no evidence of interaction of perc_population_with_high_school_degree and unemployment, which means the effect of perc_population_with_high_school_degree on hate_crimes_per_100k_splc is not different with respect to the levels of unemployment.</p>
+<p>Counfounder:</p>
+<p>Condition 1)</p>
+<pre><code>
+Call:
+lm(formula = hate_crimes_per_100k_splc ~ urbanization, data = data_crimes)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.27357 -0.14369 -0.06352  0.04624  1.17043 
+
+Coefficients:
+              Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)    0.35187    0.05115   6.879 1.54e-08 ***
+urbanization0 -0.09763    0.07312  -1.335    0.189    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.2506 on 45 degrees of freedom
+  (4 observations deleted due to missingness)
+Multiple R-squared:  0.03811,   Adjusted R-squared:  0.01673 
+F-statistic: 1.783 on 1 and 45 DF,  p-value: 0.1885</code></pre>
+<pre><code>Analysis of Variance Table
+
+Response: hate_crimes_per_100k_splc
+             Df  Sum Sq  Mean Sq F value Pr(&gt;F)
+urbanization  1 0.11195 0.111953  1.7829 0.1885
+Residuals    45 2.82568 0.062793               </code></pre>
+<p>urbanization not associated with the outcome</p>
+<p>Condition 2)</p>
+<pre><code>
+Call:
+lm(formula = gini_index ~ urbanization, data = data_crimes)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.045000 -0.012167 -0.000667  0.010167  0.068000 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)    0.464000   0.003810 121.781  &lt; 2e-16 ***
+urbanization0 -0.019333   0.005237  -3.692 0.000559 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.01867 on 49 degrees of freedom
+Multiple R-squared:  0.2176,    Adjusted R-squared:  0.2017 
+F-statistic: 13.63 on 1 and 49 DF,  p-value: 0.0005592</code></pre>
+<pre><code>Analysis of Variance Table
+
+Response: gini_index
+             Df    Sum Sq   Mean Sq F value    Pr(&gt;F)    
+urbanization  1 0.0047492 0.0047492  13.631 0.0005592 ***
+Residuals    49 0.0170720 0.0003484                      
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>urbanization associated with the exposure</p>
+<pre><code>
+Call:
+lm(formula = hate_crimes_per_100k_splc ~ gini_index, data = data_crimes)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.28669 -0.14565 -0.04991  0.07356  0.91085 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)  
+(Intercept)  -1.5275     0.7833  -1.950   0.0574 .
+gini_index    4.0205     1.7177   2.341   0.0237 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.2412 on 45 degrees of freedom
+  (4 observations deleted due to missingness)
+Multiple R-squared:  0.1085,    Adjusted R-squared:  0.08872 
+F-statistic: 5.478 on 1 and 45 DF,  p-value: 0.02374</code></pre>
+<pre><code>
+Call:
+lm(formula = hate_crimes_per_100k_splc ~ gini_index + urbanization, 
+    data = data_crimes)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.28248 -0.14938 -0.05577  0.06162  0.92103 
+
+Coefficients:
+              Estimate Std. Error t value Pr(&gt;|t|)  
+(Intercept)   -1.34994    0.88817  -1.520   0.1357  
+gini_index     3.66771    1.91115   1.919   0.0615 .
+urbanization0 -0.03433    0.07832  -0.438   0.6633  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.2434 on 44 degrees of freedom
+  (4 observations deleted due to missingness)
+Multiple R-squared:  0.1124,    Adjusted R-squared:  0.07206 
+F-statistic: 2.786 on 2 and 44 DF,  p-value: 0.07256</code></pre>
+<pre><code>Analysis of Variance Table
+
+Response: hate_crimes_per_100k_splc
+             Df  Sum Sq Mean Sq F value  Pr(&gt;F)  
+gini_index    1 0.31882 0.31882  5.3801 0.02507 *
+urbanization  1 0.01138 0.01138  0.1921 0.66333  
+Residuals    44 2.60743 0.05926                  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>for gini_index be on the causal path way it means gini_index impacts urbanization, urbanization impact hate_crimes_per_100k_splc, in this case gini_index not on the path way.</p>
+<p>By adjusting to urbanization the coefficient of gini_index reduced by almost 9%. Therefore, urbanization does not confoud the relationship between gini_index and hate_crimes_per_100k_splc.</p>
+<p>The gini_index coefficient reduced from 4.0205 in SLR to 3.66771 in MLR after adjusting for urbanization (~9% reduction).</p>
+<p>We can conclude that urbanization not confounds the relationship b/w gini_index and hate_crimes_per_100k_splc.</p>
 </div>
 
 
