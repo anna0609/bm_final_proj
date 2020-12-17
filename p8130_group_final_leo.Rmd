@@ -3,7 +3,7 @@ title: "Final Project"
 output: pdf_document
 ---
 
-```{r}
+```{r include=FALSE}
 library(tidyverse)
 library(broom)
 library(faraway)
@@ -20,16 +20,19 @@ hc_df = read_csv("./data/HateCrimes.csv") %>%
 hc_df[hc_df == "N/A"] = NA
 
 hc_df = hc_df %>% 
-  mutate(hate_crimes_per_100k_splc = as.numeric(hate_crimes_per_100k_splc)) %>% 
+  mutate(hate_crimes_per_100k_splc = as.numeric(hate_crimes_per_100k_splc),
+         urbanization = as.factor(urbanization),
+         unemployment = as.factor(unemployment)) %>% 
   na.omit()
 
-fit1 = lm(hate_crimes_per_100k_splc ~ unemployment + urbanization + median_household_income + perc_population_with_high_school_degree + perc_non_citizen + gini_index + perc_non_white, data = hc_df)
+fit1 = lm(hate_crimes_per_100k_splc ~ unemployment + urbanization + median_household_income + perc_population_with_high_school_degree + perc_non_citizen + gini_index + perc_non_white + gini_index*urbanization, data = hc_df)
+
 summary(fit1)
 vif(fit1)
 
 correlation_matrix = 
 cor(hc_df[, sapply(hc_df, is.numeric)],
-    use = "complete.obs", method = "spearman")
+    use = "complete.obs", method = "pearson")
 
 correlation_matrix
 
@@ -43,27 +46,8 @@ qqline(resid(fit1))
 ```
 
 ```{r}
-fit2 = lm(hate_crimes_per_100k_splc ~ unemployment + urbanization + median_household_income + gini_index, data = hc_df)
-
-summary(fit2) 
-```
-
-```{r}
-fit3 = lm(hate_crimes_per_100k_splc ~ unemployment + median_household_income + gini_index, data = hc_df)
-
-summary(fit3)
-```
-```{r}
-fit4 = lm(hate_crimes_per_100k_splc ~ median_household_income + gini_index, data = hc_df)
-
-summary(fit4)
-vif(fit4)
-
-qqnorm(resid(fit4))
-qqline(resid(fit4))
-```
-```{r}
 step(fit1, direction = "backward")
+step(fit1, direction = "both")
 ```
 
 ```{r}
@@ -82,7 +66,13 @@ plot(fit_after_step)
 ```
 Exclude outliers
 ```{r}
-hc_df_no_outliers = hc_df[c(-9),]
+
+# take a look at the outlier
+hc_df_only_9 = hc_df[c(9),]
+hc_df_only_9
+
+# data frame without the outlier
+hc_df_no_outliers = hc_df[c(-9),] 
 
 fit_no_9 = lm(formula = hate_crimes_per_100k_splc ~ perc_population_with_high_school_degree + 
     gini_index, data = hc_df_no_outliers)
@@ -90,10 +80,11 @@ fit_no_9 = lm(formula = hate_crimes_per_100k_splc ~ perc_population_with_high_sc
 summary(fit_no_9)
 
 plot(fit_no_9)
-```
-```{r}
-hc_df_only_9 = hc_df[c(9),]
-hc_df_only_9
+
+# 95% confidence intervals
+confint(fit_no_9, "perc_population_with_high_school_degree", 0.95)
+confint(fit_no_9, "gini_index", 0.95)
+
 ```
 This line of observation has a hate_crime_per_100k_splc greater than 100%, which is absurd. There was probably a mistake. Excluding this observation makes gini_index an insignificant predictor. 
 
@@ -125,3 +116,12 @@ hc_df_no_outliers %>%
 vif(fit_no_9) 
 ```
 No multicollinearity issues. 
+
+```{r}
+fit = lm(formula = hate_crimes_per_100k_splc ~ perc_population_with_high_school_degree + 
+    gini_index * urbanization + gini_index, data = hc_df)
+summary(fit)
+
+step(fit, direction = "both")
+```
+
