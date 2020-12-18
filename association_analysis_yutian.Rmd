@@ -102,10 +102,7 @@ Our hypothesis for mlr model:
 1. gini index
 2. education
 
-# We use correlation matrix to propose for a mlr model in part 4
 
-
-# Exploration
 
 
 
