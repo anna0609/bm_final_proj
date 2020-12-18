@@ -67,6 +67,28 @@ summary(hatecrime_df$hate_crimes_per_100k_splc)
 
 From the plots, we could see that the distribution of the hate crime rate of the United States is a positively skewed distribution and there is right tail, which makes the mean higher than the median.
 
+```{r}
+hatecrime_sqrt_df =
+  hatecrime_df %>% 
+  mutate(hate_crimes_per_100k_splc_sqrt = sqrt(hate_crimes_per_100k_splc))
+
+hatecrime_sqrt_df %>% 
+  drop_na(hate_crimes_per_100k_splc_sqrt) %>% 
+  ggplot(aes(x = hate_crimes_per_100k_splc_sqrt)) +
+	geom_histogram(alpha = 0.3, fill = "blue") +
+  geom_vline(aes(xintercept = mean(hate_crimes_per_100k_splc_sqrt, na.rm = TRUE)), color = "red", linetype = "dashed", size = 1) + 
+  labs(title = "Distribution of Hate Crime Rate (After Square Root Transformation)",
+       x = "Hate Crime Rate per 100,000 Population",
+       caption = "Data from HateCrimes.csv Dataset")
+
+qqnorm(hatecrime_sqrt_df$hate_crimes_per_100k_splc_sqrt, main = "Q-Q Plot of Hate Crime Rate (After Square Root Transformation)")
+qqline(hatecrime_sqrt_df$hate_crimes_per_100k_splc_sqrt)
+
+summary(hatecrime_sqrt_df$hate_crimes_per_100k_splc_sqrt)
+```
+
+We could see from the graphs that the distribution of square root of hate crime rate of in the United States is still a positively skewed distribution with a right tail.
+
 
 ```{r}
 hatecrime_log_df =
@@ -91,7 +113,22 @@ summary(hatecrime_log_df$hate_crimes_per_100k_splc_log)
 We could see from the graphs that the distribution of log hate crime rate of in the United States has become relatively normally distributed.
 
 
+
 ## Identify states with unusual rates and consider them as potential outliers/influential points.
+
+```{r}
+
+q1 = quantile(hatecrime_df$hate_crimes_per_100k_splc, 0.25, na.rm = TRUE)
+q3 = quantile(hatecrime_df$hate_crimes_per_100k_splc, 0.75, na.rm = TRUE)
+iqr = q3 - q1
+
+hatecrime_df %>% 
+  filter(hate_crimes_per_100k_splc < q1 - 1.5 * iqr | hate_crimes_per_100k_splc > q3 + 1.5 * iqr) %>% 
+  select(state, hate_crimes_per_100k_splc) %>%
+  knitr::kable(digits = 2)
+```
+
+
 
 ```{r box plot, message = FALSE, warning = FALSE}
 hatecrime_df %>% 
@@ -109,6 +146,15 @@ hatecrime_log_df %>%
   labs(title = "Distribution of Hate Crime Rate (After Log Transformation)",
        y = "Hate Crime Rate per 100,000 Population",
        caption = "Data from HateCrimes.csv Dataset")
+
+
+hatecrime_df %>% 
+  ggplot(aes(sample = hate_crimes_per_100k_splc)) + 
+  stat_qq() + 
+  stat_qq_line() +
+  labs(
+    title = "QQplot for hate crime per 100,000 population"
+  )
 ```
 
 From the graphs, we could also see that before transformation, the hate crime rates of the District of Columbia and Oregon are much higher than the other states, which suggests that these two could be an potential outliers. However, after log transformation, only the hate crime rate of the District of Columbia is still an outlier.

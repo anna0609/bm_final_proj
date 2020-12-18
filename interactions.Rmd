@@ -136,3 +136,41 @@ summary(fit4)
 Although the visualization above indicates that an interaction might exist; however, from the numeric summaries, the p-value of perc_population_with_high_school_degree:unemployment0 is 0.2292 > 0.05 which is not significant. Therefore, there's no evidence of interaction of perc_population_with_high_school_degree and unemployment, which means the effect of perc_population_with_high_school_degree on hate_crimes_per_100k_splc is not different with respect to the levels of unemployment.
 
 
+
+Counfounder:
+
+Condition 1)
+```{r}
+fit5<-lm(hate_crimes_per_100k_splc ~ urbanization, data=data_crimes)
+summary(fit5)
+anova(fit5) # use anova to look overall!!!!!! include all the main effects without different levels
+```
+urbanization not associated with the outcome
+
+Condition 2)
+```{r}
+fit6<-lm(gini_index ~ urbanization, data=data_crimes)
+summary(fit6)
+anova(fit6)
+```
+urbanization associated with the exposure
+
+```{r}
+fit8<-lm(hate_crimes_per_100k_splc ~ gini_index, data=data_crimes)
+summary(fit8)
+
+fit7<-lm(hate_crimes_per_100k_splc ~ gini_index + urbanization, data=data_crimes)
+summary(fit7)
+anova(fit7)
+
+```
+for gini_index be on the causal path way it means gini_index impacts urbanization, urbanization impact hate_crimes_per_100k_splc, in this case gini_index not on the path way.
+
+
+By adjusting to urbanization the coefficient of gini_index reduced by almost 9%. Therefore, urbanization does not confoud the relationship between gini_index and hate_crimes_per_100k_splc.
+
+The gini_index coefficient reduced from 4.0205 in SLR to 3.66771 in MLR after adjusting for urbanization (~9% reduction). 
+
+We can conclude that urbanization not confounds the relationship b/w gini_index and hate_crimes_per_100k_splc.
+
+
