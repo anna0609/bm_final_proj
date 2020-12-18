@@ -1,6 +1,6 @@
 ---
 title: "Final project"
-author: "Minjie Bao (mb4757)"
+author: "Minjie Bao (mb4757), Leo Liu(ll3452), Yutian Luo(yl4608), Cong Zhang(cz2612)"
 date: '`r format(Sys.time(), "%d %B, %Y")`'
 output: html_document
 ---
@@ -83,11 +83,11 @@ hatecrime_sqrt_df %>%
   ggplot(aes(x = hate_crimes_per_100k_splc_sqrt)) +
 	geom_histogram(alpha = 0.3, fill = "blue") +
   geom_vline(aes(xintercept = mean(hate_crimes_per_100k_splc_sqrt, na.rm = TRUE)), color = "red", linetype = "dashed", size = 1) + 
-  labs(title = "Distribution of Hate Crime Rate (After Square Root Transformation)",
+  labs(title = "Distribution of Hate Crime Rate (After SquareRoot Transform)",
        x = "Hate Crime Rate per 100,000 Population",
        caption = "Data from HateCrimes.csv Dataset")
 
-qqnorm(hatecrime_sqrt_df$hate_crimes_per_100k_splc_sqrt, main = "Q-Q Plot of Hate Crime Rate (After Square Root Transformation)")
+qqnorm(hatecrime_sqrt_df$hate_crimes_per_100k_splc_sqrt, main = "Q-Q Plot of Hate Crime Rate (After SquareRoot Transform)")
 qqline(hatecrime_sqrt_df$hate_crimes_per_100k_splc_sqrt)
 
 summary(hatecrime_sqrt_df$hate_crimes_per_100k_splc_sqrt)
@@ -306,7 +306,7 @@ The gini_index coefficient reduced from 4.0205 in SLR to 3.66771 in MLR after ad
 We can conclude that urbanization not confounds the relationship b/w gini_index and hate_crimes_per_100k_splc.
 
 
-# Yutian Luo coding part: 
+# Yutian Luo's coding part: 
 
 ## Verify if this association holds true in this dataset, but also explore associations of all the other covariates mentioned above and draw your own conclusions.
 
@@ -335,7 +335,7 @@ hatecrime_df =
 
 ```
 
-# why use gini index to represent inequality
+## why use gini index to represent inequality
 
 ```{r association}
 
@@ -373,8 +373,7 @@ From the t test, we conclude that we are 95% confident that the inequality has a
 
 This suggests that the higher inequality is, the higher rate of hate crime will occur.
 
-# futher interpreate
-
+## futher interpreate
 
 ```{r corr matrix}
 
@@ -391,7 +390,7 @@ From the correlation plot, we see that there is relatively higher correlation be
 
 The other pair of moderate correlation is between inequality and population's high school degreee percentage; inequality with percent of alien; education with percent of none white; and education with inequality.
 
-# mlr model
+## mlr model
 Our hypothesis for mlr model:
 1. gini index
 2. education
@@ -400,7 +399,7 @@ We use correlation matrix to propose for a mlr model in part 4
 Exploration
 
 
-# Leo Liu coding part:
+# Leo Liu's coding part:
 ```{r}
 hc_df = read_csv("./data/HateCrimes.csv") %>% 
   janitor::clean_names()
@@ -424,8 +423,7 @@ cor(hc_df[, sapply(hc_df, is.numeric)],
 
 correlation_matrix
 
-correlation_plt = 
-  corrplot(correlation_matrix)
+#correlation_plt = corrplot(correlation_matrix)
 
 qqnorm(resid(fit1))
 qqline(resid(fit1))
@@ -452,7 +450,7 @@ vif(fit_after_step)
 plot(fit_after_step)
 
 ```
-Exclude outliers
+## Exclude outliers
 ```{r}
 
 # take a look at the outlier
